@@ -4,64 +4,6 @@ import numpy as np
 import random
 from math import *
 
-
-def uniGenerate(a, b, n):
-    # generate n uniform distributted real numbers in the range of (a,b), duplication is permitted
-    uniList = []
-    for i in range(0,n):
-        uniList.append(random.uniform(a,b))
-    return np.array(uniList)
-
-def gaussGenerate(mu, sigma, n):
-    # generate n Gauss distributted real numbers in the range of (a,b), duplication is permitted 
-    gaussList = []
-    for i in range(0,n):
-        gaussList.append(random.gauss(mu,sigma))
-    return np.array(gaussList)
-
-def experimentalDatasetGenerate(noiseFraction = 0.5):
-    # generate 2D experimental synthetic dataset
-    # let's set the approximate range of the experimental picture is about 100*100
-    clusterScale = 800
-    c1x = uniGenerate(10,45,clusterScale)
-    c1y = c1x + gaussGenerate(0,1,clusterScale)
-    c2x = uniGenerate(15,45,clusterScale)
-    c2y = c2x + gaussGenerate(0,1,clusterScale) + [15]
-    c3dist = gaussGenerate(20,1.5,clusterScale*3)
-    c3angle = uniGenerate(0, 2*pi, clusterScale*3)
-    c3x = c3dist * np.cos(c3angle) + [75]
-    c3y = c3dist * np.sin(c3angle) + [75]
-    c4dist = gaussGenerate(8,1,clusterScale)
-    c4angle = uniGenerate(0, 2*pi, clusterScale)
-    c4x = c4dist * np.cos(c4angle) + [75]
-    c4y = c4dist * np.sin(c4angle) + [75]
-    c5x = gaussGenerate(60,3,clusterScale)
-    c5y = gaussGenerate(15,2,clusterScale)
-    cx = np.concatenate((c1x, c2x, c3x, c4x, c5x))
-    cy = np.concatenate((c1y, c2y, c3y, c4y, c5y))
-    tags = np.array([1]*clusterScale + [2]*clusterScale + [3]*clusterScale*3 + [4]*clusterScale + [5]*clusterScale)
-    dataset = np.concatenate((cx, cy, tags)).reshape(3,clusterScale*7).T
-    noiseNum = floor(7*clusterScale*noiseFraction/(1-noiseFraction))
-    noisex = uniGenerate(0,100,noiseNum)
-    noisey = uniGenerate(0,100,noiseNum)
-    noiseSet = np.concatenate((noisex, noisey, np.array([0]*noiseNum))).reshape(3,noiseNum).T
-    c1judge = np.logical_and(np.logical_and(10 < noiseSet[:,0], noiseSet[:,0] < 45), \
-                             np.power(noiseSet[:,1] - noiseSet[:,0], 2) < 3)
-    noiseSet[c1judge,2] = 1
-    c2judge = np.logical_and(np.logical_and(15 < noiseSet[:,0], noiseSet[:,0] < 45), \
-                             np.power(noiseSet[:,1] - noiseSet[:,0] - [15], 2) < 3)
-    noiseSet[c2judge,2] = 2
-    c3judge = np.logical_and(17 < np.sqrt(np.power(noiseSet[:,0] - [75], 2) + np.power(noiseSet[:,1] - [75], 2)), \
-                             np.sqrt(np.power(noiseSet[:,0] - [75], 2) + np.power(noiseSet[:,1] - [75], 2))< 23)
-    noiseSet[c3judge,2] = 3
-    c4judge = np.logical_and(6 < np.sqrt(np.power(noiseSet[:,0] - [75], 2) + np.power(noiseSet[:,1] - [75], 2)), \
-                             np.sqrt(np.power(noiseSet[:,0] - [75], 2) + np.power(noiseSet[:,1] - [75], 2))< 10)
-    noiseSet[c4judge,2] = 4
-    c5judge = np.sqrt(np.power(noiseSet[:,0] - 60,2) + np.power(noiseSet[:,1]-15,2)) < 5
-    noiseSet[c5judge,2] = 5
-    dataset = np.concatenate((dataset, noiseSet))
-    return dataset
-
 def scale_01_data(rawData):
     # normalize the raw dataset
     dim = rawData.shape[1]  
